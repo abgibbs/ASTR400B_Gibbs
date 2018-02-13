@@ -1,0 +1,51 @@
+# Homework 5
+#
+
+# import modules
+import numpy as np
+import astropy.units as u
+from ReadFile import Read
+from CenterOfMass import CenterOfMass
+import matplotlib
+import matplotlib.pyplot as plt
+
+
+class MassProfile:
+
+    def __init__(self, galaxy, snap):
+        # construct filename
+        ilbl = '000' + str(snap) # add string of filenumber to 000
+        ilbl = ilbl[-3:] # keep last 3 digits
+        self.filename = '/home/agibbs/' + "%s_"%(galaxy) + ilbl +'.txt'
+
+        # store galaxy name
+        self.gname = galaxy
+
+        # read in the file and particle type
+        self.time, self.total, self.data = Read(self.filename)
+
+        # store the mass, positions, velocities of only the particles of the given type
+        self.m = self.data['m']
+
+        ##### PLACE other particle properties here: x,y,z,vx,vy,vz #####
+        self.x = self.data['x'] * u.kpc
+        self.y = self.data['y'] * u.kpc
+        self.z = self.data['z'] * u.kpc
+
+    def MassEnclosed(self, ptype, radii):
+        # Return array of masses within specific radii of COM. Takes particle type and an array of radii.
+        p_index = np.where(self.data['type'] == ptype)
+        GALCOM = CenterOfMass(self.filename, ptype)
+        GAL_xcom, GAL_ycom, GAL_zcom = GALCOM.COM_P(0.1)
+        radius = ( (self.x[p_index] - GAL_xcom)**2 + (self.y[p_index] - GAL_ycom)**2 + \
+                   (self.z[p_index] - GAL_zcom)**2 ) ** 0.5
+        mass = np.zeros(radii.size)
+        p_mass = self.m[p_index]
+        for index, radii_val in enumerate(radii):
+            r_index = np.where(radius < radii_val)
+            mass[index] = np.sum(p_mass[r_index])
+        return mass * u.Msun * 1e10
+
+MWPROF = MassProfile('MW', 000)
+radii = np.linspace(0, 100, 101) * u.kpc
+print(MWPROF.MassEnclosed(2, radii)[99])
