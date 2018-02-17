@@ -1,0 +1,24 @@
+import numpy
+import matplotlib.pyplot as plt
+import astropy.units as u
+from ReadFile import Read
+from CenterOfMass import CenterOfMass
+
+
+def OrbitCOM(galaxy, start, end, n):
+    fileout = "Orbit_galaxyname.txt"
+    Orbit = np.zeros(int(end/n) + 1, 7)
+    delta = 0.5
+    VolDec = 4
+
+    for i in np.arange(start, end+n, n):
+        lbl = '000' + str(i) # add string of filenumber to 000
+        ilbl = ilbl[-3:] # keep last 3 digits
+        filename = '/home/agibbs/' + "%s_"%(galaxy) + ilbl +'.txt'
+
+        COM = CenterOfMass(filename, 2)
+
+        Orbit[0, i] = float(COM.time / u.Myr)
+        Orbit[1, i] = float(COM.x / u.kpc)
+
+    return
