@@ -1,0 +1,7 @@
+#Homework 7
+#Analytic orbit of M33
+
+# import modules
+import numpy as np
+import astropy.units as u
+from ReadFile import Read
