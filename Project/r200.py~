@@ -1,0 +1,39 @@
+#Function to calculate the position of a galaxy from snap number start to end in increments of n
+import numpy as np
+import matplotlib.pyplot as plt
+import astropy.units as u
+from ReadFile import Read
+from CenterOfMass import CenterOfMass
+
+
+def OrbitCOM(galaxy, start, end, n):
+    #setup paramters for CenterOfMass, array, and output file
+    fileout = "Orbit_" + "%s"%(galaxy) +  ".txt"
+    Orbit = np.zeros(( int(end/n) + 1, 7))
+    delta = 0.5
+    VolDec = 4
+
+    #calculate center of mass for every snap number and save into Orbit array
+    for i in np.arange(start, end+n, n):
+        ilbl = '000' + str(i) # add string of filenumber to 000
+        ilbl = ilbl[-3:] # keep last 3 digits
+        filename = '/home/agibbs/VLowRes/' + "%s_"%(galaxy) + ilbl +'.txt'
+
+        COM = CenterOfMass(filename, 2) #disk particles only
+        xcom, ycom, zcom = COM.COM_P(delta, VolDec)
+        vxcom, vycom, vzcom = COM.COM_V(xcom, ycom, zcom)
+
+        Orbit[int(i/n), 0] = float(COM.time / u.Myr)
+        Orbit[int(i/n), 1] = float(xcom / u.kpc)
+        Orbit[int(i/n), 2] = float(ycom / u.kpc)
+        Orbit[int(i/n), 3] = float(zcom / u.kpc)
+        Orbit[int(i/n), 4] = float(vxcom / u.km * u.s)
+        Orbit[int(i/n), 5] = float(vycom / u.km * u.s)
+        Orbit[int(i/n), 6] = float(vzcom / u.km * u.s)
+
+        print(i)
+
+    #save text file with complete array
+    np.savetxt(fileout, Orbit, header='t, x, y, z, vx, vy, vz', comments='#', fmt='%.2f')
+
+    return
