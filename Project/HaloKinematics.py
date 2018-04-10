@@ -18,10 +18,11 @@ class HaloKinematics:
         # store snaps to calculate kinematics for
         self.galaxy = galaxy
         self.start = start
-        self.num = int(end/n)
+        self.n = n
+        self.end = end
 
         # perform r200 calculations to match selected snaps, in case it has not been done
-        # r200(galaxy, start, end, n)
+        r200(galaxy, start, end, n)
 
         # load r200 values
         gal_r200 = np.genfromtxt('R200_'+galaxy+'.txt', dtype=None,names=True,skip_header=0)
@@ -30,7 +31,7 @@ class HaloKinematics:
 
         return
 
-    def PosAndVels(self, snap, radius_cut):
+    def PosAndVels(self, filename, radius_cut):
         # calculates the relative positions and velocities of all halo particles, necessary for
         # vel anistropy and spin calculations
         # takes snap number and outer radius, returns position magnitude and components, and vel components
@@ -39,7 +40,7 @@ class HaloKinematics:
         delta = 5.0
         VolDec = 2
 
-        COM = CenterOfMass('/home/agibbs/VLowRes/' + "%s_"%(self.galaxy) + "%s"%(snap) +'.txt', 1)
+        COM = CenterOfMass(filename, 1)
         xcom, ycom, zcom = COM.COM_P(delta, VolDec)
         vxcom, vycom, vzcom = COM.COM_V(xcom, ycom, zcom)
 
@@ -58,14 +59,14 @@ class HaloKinematics:
         # only return particles within radius cut
         index = np.where(R < radius_cut * u.kpc)
 
-        return R[index], x[index], y[index], z[index], vx[index], vy[index], vz[index]
+        return R[index], x[index], y[index], z[index], vx[index], vy[index], vz[index], COM.m[index]
 
 
-    def VelAnistropy(self, snap, radius_cut):
+    def VelAnisotropy(self, filename, radius_cut):
         # calculates velocity anistropy given snap number and outer radius cut
 
         # get relative positions and velocities
-        R, x, y, z, vx, vy, vz = self.PosAndVels(snap, radius_cut)
+        R, x, y, z, vx, vy, vz, m = self.PosAndVels(filename, radius_cut)
 
         # create radial unit vector
         xnorm = x / R
@@ -83,8 +84,69 @@ class HaloKinematics:
         vani = 1.0 - vtsum / vrsum / 2 # total velocity anistropy
         return vani
 
-    def Spin(self):
+    def Spin(self, filename, radius_cut):
+         R, x, y, z, vx, vy, vz, m = self.PosAndVels(filename, radius_cut)
+
+         # calculate angular momentum vector
+         Lz = np.sum((x * vy - y * vx) * m) * u.s / u.km / u.kpc
+         Ly = np.sum((-x * vz + z * vx) * m) * u.s / u.km / u.kpc
+         Lx = np.sum((y * vz - z *vy) * m) * u.s / u.km / u.kpc
+
+         L = (Lz**2 + Ly**2 + Lx**2)**0.5
+
+         Lxnorm = Lx / L
+         Lynorm = Ly / L
+         Lznorm = Lz / L
+
+         return L, Lxnorm, Lynorm, Lznorm
+
+    def MergerProgression(self):
+        # performs kinematic functions for each snap and saves values into text files
+
+        # create arrays for data
+        velani = np.zeros((int(self.end/self.n) + 1, 3))
+        spin200 = np.zeros((int(self.end/self.n) + 1, 5))
+        spinq200 = np.zeros((int(self.end/self.n) + 1, 5))
+        fileout1 = "VelANI_" + "%s"%(self.galaxy) +  ".txt" # velocity anisotropy file
+        fileout2 = "Spin200_" + "%s"%(self.galaxy) +  ".txt" # spin file calculated out to r200
+        fileout3 = "Spinq200_" + "%s"%(self.galaxy) +  ".txt" # spin file calculated out to 0.25 * r200
+
+        counter = 0 # for r200 files
+
+        for i in np.arange(self.start, self.end+self.n, self.n):
+            # create filename for kinematic calculations
+            ilbl = '000' + str(i) # add string of filenumber to 000
+            ilbl = ilbl[-3:] # keep last 3 digits
+            filename = '/home/agibbs/VLowRes/' + "%s_"%(self.galaxy) + ilbl +'.txt'
+
+            # perform velocity anisotropy calculations for this snap and add to array
+            velani[int(i/self.n), 0] = i * 14.2857
+            velani[int(i/self.n), 1] = self.VelAnisotropy(filename, self.r200[counter])
+            velani[int(i/self.n), 2] = self.VelAnisotropy(filename, self.qr200[counter])
+            """
+            # perform spin calculations and add to array
+            L200, Lx200, Ly200, Lz200 = self.Spin(filename, self.r200[counter])
+            Lq200, Lxq200, Lyq200, Lzq200 = self.Spin(filename, self.qr200[counter])
+
+            spin200[int(i/self.n), 0] = i * 14.2857
+            spin200[int(i/self.n), 1] = L200
+            spin200[int(i/self.n), 2] = Lx200
+            spin200[int(i/self.n), 3] = Ly200
+            spin200[int(i/self.n), 4] = Lz200
+
+            spinq200[int(i/self.n), 0] = i * 14.2857
+            spinq200[int(i/self.n), 1] = Lq200
+            spinq200[int(i/self.n), 2] = Lxq200
+            spinq200[int(i/self.n), 3] = Lyq200
+            spinq200[int(i/self.n), 4] = Lzq200
+            """
+            counter = counter + 1
+
+        np.savetxt(fileout1, velani, header='t, r200_velANI, qr200_velANI', comments='#', fmt='%.4f')
+        #np.savetxt(fileout2, spin200, header='t, L, Lx, Ly, Lz', comments='#', fmt='%.4f')
+        #np.savetxt(fileout3, spinq200, header='t, L, Lx, Ly, Lz', comments='#', fmt='%.4f')
+
         return
 
-MWkin = HaloKinematics('MW', 0, 800, 20)
-print(MWkin.VelAnistropy('000', MWkin.r200[0]))
+MWkin = HaloKinematics('M31', 0, 800, 10)
+MWkin.MergerProgression()

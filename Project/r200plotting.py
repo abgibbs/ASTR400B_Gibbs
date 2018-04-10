@@ -9,6 +9,8 @@ M31_pos = np.genfromtxt('Orbit_M31.txt', dtype=None,names=True,skip_header=0)
 
 sep_MW_M31 = ( (MW_pos['x'] - M31_pos['x'])**2 + (MW_pos['y'] - M31_pos['y'])**2 + (MW_pos['z'] - M31_pos['z'])**2 )**0.5
 
+#plotting 3 graphs, top is MW halo radius, mid is M31 halo radius, bottom is galaxy sep
+
 plt.figure(1)
 plt.subplot(311)
 plt.plot(MW_r200['t'], MW_r200['r200'])
