@@ -1,0 +1,17 @@
+# Homework 7
+# Class to load halo and calculate spin and velocity anistropy
+# Takes galaxy name as input and snaps to
+
+# import modules
+import numpy as n
+import astropy.units as u
+from astropy.constants import G
+from ReadFile import Read
+from CenterOfMass import CenterOfMass
+import matplotlib
+import matplotlib.pyplot as plt
+
+class HaloKinematics:
+
+    def __init__(self):
+        return

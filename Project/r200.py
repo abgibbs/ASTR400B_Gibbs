@@ -53,4 +53,4 @@ def r200(galaxy, start, end, n):
 
     return
 
-r200('MW', 0, 800, 20)
+r200('MW', 0, 800, 10)
