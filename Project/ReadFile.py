@@ -20,3 +20,4 @@ def Read(filename): #read header and save data from file
     data = np.genfromtxt(filename, dtype=None,names=True,skip_header=3)
 
     return time, total, data
+

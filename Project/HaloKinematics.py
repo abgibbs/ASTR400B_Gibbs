@@ -58,6 +58,7 @@ class HaloKinematics:
 
         # only return particles within radius cut
         index = np.where(R < radius_cut * u.kpc)
+        #print(radius_cut)
 
         return R[index], x[index], y[index], z[index], vx[index], vy[index], vz[index], COM.m[index] * u.Msun * 1e10
 
@@ -73,6 +74,7 @@ class HaloKinematics:
         ynorm = y / R
         znorm = z / R
 
+
         # dot product to find radial component squared
         vrad2 = (xnorm * vx + ynorm * vy + znorm * vz)**2
 
@@ -85,7 +87,7 @@ class HaloKinematics:
         return vani
 
     def Spin(self, filename, radius_cut):
-        # not actually spin currently,  look at Bullocks 2001 to put in real spin
+        # 'Practical' spin parameter from Bullocks 2001. spin = J/MVR(sqrt(2))
          R, x, y, z, vx, vy, vz, m = self.PosAndVels(filename, radius_cut)
 
          # calculate angular momentum vector
@@ -99,15 +101,24 @@ class HaloKinematics:
          Lynorm = Ly / L
          Lznorm = Lz / L
 
-         return L, Lxnorm, Lynorm, Lznorm
+         # mass within radius cut
+         M = np.sum(m)
+
+         # circular velocity
+         V = ( G * M / (radius_cut * u.kpc))**0.5 / u.km * u.s
+
+         # spin
+         spin = L / ((2**0.5) * M * V * radius_cut) * u.Msun
+         #print(spin)
+         return spin, Lxnorm, Lynorm, Lznorm
 
     def MergerProgression(self):
         # performs kinematic functions for each snap and saves values into text files
 
         # create arrays for data
-        velani = np.zeros((int(self.end/self.n) + 1, 3))
-        spin200 = np.zeros((int(self.end/self.n) + 1, 5))
-        spinq200 = np.zeros((int(self.end/self.n) + 1, 5))
+        velani = np.zeros((int((self.end)/self.n) + 1, 3))
+        spin200 = np.zeros((int((self.end)/self.n) + 1, 5))
+        spinq200 = np.zeros((int((self.end)/self.n) + 1, 5))
         fileout1 = "VelANI_" + "%s"%(self.galaxy) +  ".txt" # velocity anisotropy file
         fileout2 = "Spin200_" + "%s"%(self.galaxy) +  ".txt" # spin file calculated out to r200
         fileout3 = "Spinq200_" + "%s"%(self.galaxy) +  ".txt" # spin file calculated out to 0.25 * r200
@@ -118,7 +129,8 @@ class HaloKinematics:
             # create filename for kinematic calculations
             ilbl = '000' + str(i) # add string of filenumber to 000
             ilbl = ilbl[-3:] # keep last 3 digits
-            filename = '/home/agibbs/VLowRes/' + "%s_"%(self.galaxy) + ilbl +'.txt'
+            #filename = '/home/agibbs/VLowRes/' + "%s_"%(self.galaxy) + ilbl +'.txt' # change comments for MW+M31
+            filename = '/home/agibbs/400B/ASTR400B_Gibbs/Project/Remnant/MW+M31_'+ilbl+'.txt'
 
             # perform velocity anisotropy calculations for this snap and add to array
             velani[int(i/self.n), 0] = i * 14.2857
@@ -145,10 +157,11 @@ class HaloKinematics:
             counter = counter + 1
 
         np.savetxt(fileout1, velani, header='t, r200_velANI, qr200_velANI', comments='#', fmt='%.4f')
-        np.savetxt(fileout2, spin200, header='t, L, Lx, Ly, Lz', comments='#', fmt='%.4f')
-        np.savetxt(fileout3, spinq200, header='t, L, Lx, Ly, Lz', comments='#', fmt='%.4f')
+        np.savetxt(fileout2, spin200, header='t, spin, Lx, Ly, Lz', comments='#', fmt='%.4f')
+        np.savetxt(fileout3, spinq200, header='t, spin, Lx, Ly, Lz', comments='#', fmt='%.4f')
 
         return
 
-MWkin = HaloKinematics('MW', 0, 800, 10)
+# create class instance and calculate kinematic evolution
+MWkin = HaloKinematics('MW+M31', 0, 800, 10)
 MWkin.MergerProgression()

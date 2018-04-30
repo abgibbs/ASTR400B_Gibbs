@@ -6,8 +6,10 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
+# choose galaxy
 galaxy = 'MW'
 
+# read in angular momentum data
 galmom = np.genfromtxt('Spin200_'+galaxy+'.txt', dtype=None,names=True,skip_header=0)
 
 t = galmom['t']
@@ -16,14 +18,16 @@ Lx = galmom['Lx']
 Ly = galmom['Ly']
 Lz = galmom['Lz']
 
-
+# create empty array
 dotP = np.zeros(L.size-1)
-
+# calculate angle changes
 for i in range(L.size-1):
     dotP[i] = Lx[i] * Lx[i+1] + Ly[i] * Ly[i+1] + Lz[i] * Lz[i+1]
 
 dTheta = np.arccos(dotP) * 180 / np.pi
 t = np.delete(t, 0, 0)
+
+# plotting
 plt.plot(t, dTheta)
 plt.title('Angular Change in Angular Momentum Vector')
 plt.xlabel('Time (Myr)')

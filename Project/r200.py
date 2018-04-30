@@ -7,18 +7,19 @@ from CenterOfMass import CenterOfMass
 
 
 def r200(galaxy, start, end, n):
-    #setup paramters for CenterOfMass, array, and output file
+    #setup parameters for CenterOfMass, array, and output file
     fileout = "R200_" + "%s"%(galaxy) +  ".txt"
     R200 = np.zeros(( int(end/n) + 1, 3))
-    delta = 5.0
+    delta = 5.0 # com params
     VolDec = 2
-    crit_density = 147.712 * u.Msun / u.kpc**3
+    crit_density = 147.712 * u.Msun / u.kpc**3 #critical density for closure
 
     #calculate r200 for every snap number and save into R200 array
     for i in np.arange(start, end+n, n):
         ilbl = '000' + str(i) # add string of filenumber to 000
         ilbl = ilbl[-3:] # keep last 3 digits
-        filename = '/home/agibbs/VLowRes/' + "%s_"%(galaxy) + ilbl +'.txt'
+        #filename = '/home/agibbs/VLowRes/' + "%s_"%(galaxy) + ilbl +'.txt' # change comments for MW+M31
+        filename = '/home/agibbs/400B/ASTR400B_Gibbs/Project/Remnant/MW+M31_'+ilbl+'.txt'
 
         #COM position
         COM = CenterOfMass(filename, 1) #halo particles only
@@ -28,7 +29,7 @@ def r200(galaxy, start, end, n):
         xref = COM.x - xcom
         yref = COM.y - ycom
         zref = COM.z - zcom
-        R = (xref**2 + yref**2 + zref**2)**0.5 
+        R = (xref**2 + yref**2 + zref**2)**0.5
         density = 1e9 * u.Msun / u.kpc**3 # initial density to start loop
         R_step = 0.1 * u.kpc # radius steps
         R_iter = 50.0 * u.kpc # first radius
@@ -52,5 +53,5 @@ def r200(galaxy, start, end, n):
     np.savetxt(fileout, R200, header='t, r200, qr200', comments='#', fmt='%.2f')
 
     return
-
-r200('MW', 0, 800, 10)
+# run function for given galaxy
+r200('MW+M31', 0, 800, 10)
