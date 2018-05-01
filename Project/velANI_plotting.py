@@ -47,6 +47,7 @@ plt.axvline(x=4000, color='black', linestyle='--')
 plt.axvline(x=5850, color='black', linestyle='--')
 plt.axvline(x=6200, color='black', linestyle='-')
 plt.legend(loc='upper right')
+plt.xlabel('Time (Myr)')
 plt.xlim(0, 12000)
 plt.title('Remnant Velocity Anisotropy Evolution')
 '''

@@ -43,6 +43,7 @@ plt.subplot(313)
 plt.plot(MWM31_s200['t'][40:], MWM31_s200['spin'][40:], label='Within $r_{200}$') #only plot after galaxies merge
 plt.plot(MWM31_qs200['t'][40:], MWM31_qs200['spin'][40:], 'r', label='Within $r_{200}/4$')
 plt.xlim(0, 12000)
+plt.xlabel('Time (Myr)')
 plt.ylabel("Spin $\lambda'$")
 plt.axvline(x=4000, color='black', linestyle='--')
 plt.axvline(x=5850, color='black', linestyle='--')
